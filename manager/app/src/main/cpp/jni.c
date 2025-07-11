@@ -294,6 +294,12 @@ NativeBridgeNP(isSuEnabled, jboolean) {
     return is_su_enabled();
 }
 
+NativeBridgeNP(getManagerUid, jint) {
+    uid_t manager_uid = get_manager_uid();
+    return (jint)manager_uid;
+}
+
+
 NativeBridge(setSuEnabled, jboolean, jboolean enabled) {
     return set_su_enabled(enabled);
 }

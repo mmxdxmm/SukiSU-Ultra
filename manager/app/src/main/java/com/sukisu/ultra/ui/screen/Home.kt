@@ -682,7 +682,11 @@ private fun InfoCard(
 
             InfoCardItem(
                 stringResource(R.string.home_manager_version),
-                "${systemInfo.managerVersion.first} (${systemInfo.managerVersion.second.toInt()})",
+                if (Natives.version >= Natives.MINIMAL_SUPPORTED_MANAGER_UID) {
+                        "${systemInfo.managerVersion.first} (${systemInfo.managerVersion.second.toInt()}) | UID: ${Natives.getManagerUid()}"
+                    } else {
+                        "${systemInfo.managerVersion.first} (${systemInfo.managerVersion.second.toInt()})"
+                    },
                 icon = Icons.Default.SettingsSuggest,
             )
 

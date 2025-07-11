@@ -40,6 +40,7 @@ extern const char* zako_file_verrcidx2str(uint8_t index);
 #define CMD_IS_UID_SHOULD_UMOUNT 13
 #define CMD_IS_SU_ENABLED 14
 #define CMD_ENABLE_SU 15
+#define CMD_GET_MANAGER_UID 16
 
 #define CMD_GET_VERSION_FULL 0xC0FFEE1A
 
@@ -118,6 +119,12 @@ bool is_su_enabled() {
     // if ksuctl failed, we assume su is enabled, and it cannot be disabled.
     ksuctl(CMD_IS_SU_ENABLED, &enabled, NULL);
     return enabled;
+}
+
+uid_t get_manager_uid() {
+    uid_t manager_uid = (uid_t)-1;
+    ksuctl(CMD_GET_MANAGER_UID, &manager_uid, nullptr);
+    return manager_uid;
 }
 
 bool is_KPM_enable() {

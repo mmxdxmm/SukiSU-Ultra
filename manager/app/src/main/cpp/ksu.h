@@ -113,6 +113,8 @@ bool set_su_enabled(bool enabled);
 
 bool is_su_enabled();
 
+uid_t get_manager_uid();
+
 bool is_KPM_enable();
 
 bool get_hook_type(char* hook_type, size_t size);

@@ -29,6 +29,8 @@ object Natives {
 
     const val MINIMAL_SUPPORTED_KPM = 12800
 
+    const val MINIMAL_SUPPORTED_MANAGER_UID = 13348
+
     const val ROOT_UID = 0
     const val ROOT_GID = 0
 
@@ -95,6 +97,12 @@ object Natives {
      */
     external fun isSuEnabled(): Boolean
     external fun setSuEnabled(enabled: Boolean): Boolean
+
+    /**
+     * Get the UID of the current root manager.
+     * @return manager UID, or -1 if unavailable.
+     */
+    external fun getManagerUid(): Int
     external fun isKPMEnabled(): Boolean
     external fun getHookType(): String
 
