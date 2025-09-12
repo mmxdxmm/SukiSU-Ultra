@@ -33,18 +33,6 @@ private val ksuDaemonPath by lazy {
     "${ksuApp.applicationInfo.nativeLibraryDir}${File.separator}libzakozako.so"
 }
 
-
-object KsuCli {
-    val SHELL: Shell = createRootShell()
-    val GLOBAL_MNT_SHELL: Shell = createRootShell(true)
-}
-
-fun getRootShell(globalMnt: Boolean = false): Shell {
-    return if (globalMnt) KsuCli.GLOBAL_MNT_SHELL else {
-        KsuCli.SHELL
-    }
-}
-
 inline fun <T> withNewRootShell(
     globalMnt: Boolean = false,
     block: Shell.() -> T
@@ -96,7 +84,7 @@ fun execKsud(args: String, newShell: Boolean = false): Boolean {
             ShellUtils.fastCmdResult(this, "$ksuDaemonPath $args")
         }
     } else {
-        ShellUtils.fastCmdResult(getRootShell(), "$ksuDaemonPath $args")
+        ShellUtils.fastCmdResult("$ksuDaemonPath $args")
     }
 }
 
@@ -108,9 +96,8 @@ fun install() {
 }
 
 fun listModules(): String {
-    val shell = getRootShell()
     val out =
-        shell.newJob().add("$ksuDaemonPath module list").to(ArrayList(), null).exec().out
+        Shell.cmd("$ksuDaemonPath module list").to(ArrayList(), null).exec().out
     return out.joinToString("\n").ifBlank { "[]" }
 }
 
@@ -324,22 +311,17 @@ fun installBoot(
 }
 
 fun reboot(reason: String = "") {
-    val shell = getRootShell()
     if (reason == "recovery") {
         // KEYCODE_POWER = 26, hide incorrect "Factory data reset" message
-        ShellUtils.fastCmd(shell, "/system/bin/input keyevent 26")
+        ShellUtils.fastCmdResult("/system/bin/input keyevent 26")
     }
-    ShellUtils.fastCmd(shell, "/system/bin/svc power reboot $reason || /system/bin/reboot $reason")
+    ShellUtils.fastCmdResult("/system/bin/svc power reboot $reason || /system/bin/reboot $reason")
 }
 
-fun rootAvailable(): Boolean {
-    val shell = getRootShell()
-    return shell.isRoot
-}
+fun rootAvailable() = Shell.isAppGrantedRoot() == true
 
 fun isAbDevice(): Boolean {
-    val shell = getRootShell()
-    return ShellUtils.fastCmd(shell, "getprop ro.build.ab_update").trim().toBoolean()
+    return ShellUtils.fastCmd("getprop ro.build.ab_update").trim().toBoolean()
 }
 
 fun isInitBoot(): Boolean {
@@ -347,91 +329,77 @@ fun isInitBoot(): Boolean {
 }
 
 suspend fun getCurrentKmi(): String = withContext(Dispatchers.IO) {
-    val shell = getRootShell()
     val cmd = "boot-info current-kmi"
-    ShellUtils.fastCmd(shell, "$ksuDaemonPath $cmd")
+    ShellUtils.fastCmd("$ksuDaemonPath $cmd")
 }
 
 suspend fun getSupportedKmis(): List<String> = withContext(Dispatchers.IO) {
-    val shell = getRootShell()
     val cmd = "boot-info supported-kmi"
-    val out = shell.newJob().add("$ksuDaemonPath $cmd").to(ArrayList(), null).exec().out
+    val out = Shell.cmd("$ksuDaemonPath $cmd").to(ArrayList(), null).exec().out
     out.filter { it.isNotBlank() }.map { it.trim() }
 }
 
 fun hasMagisk(): Boolean {
-    val shell = getRootShell(true)
-    val result = shell.newJob().add("which magisk").exec()
-    Log.i(TAG, "has magisk: ${result.isSuccess}")
-    return result.isSuccess
+    val result = ShellUtils.fastCmdResult("which magisk")
+    Log.i(TAG, "has magisk: $result")
+    return result
 }
 
 fun isSepolicyValid(rules: String?): Boolean {
     if (rules == null) {
         return true
     }
-    val shell = getRootShell()
     val result =
-        shell.newJob().add("$ksuDaemonPath sepolicy check '$rules'").to(ArrayList(), null)
+        Shell.cmd("$ksuDaemonPath sepolicy check '$rules'").to(ArrayList(), null)
             .exec()
     return result.isSuccess
 }
 
 fun getSepolicy(pkg: String): String {
-    val shell = getRootShell()
     val result =
-        shell.newJob().add("$ksuDaemonPath profile get-sepolicy $pkg").to(ArrayList(), null)
+        Shell.cmd("$ksuDaemonPath profile get-sepolicy $pkg").to(ArrayList(), null)
             .exec()
     Log.i(TAG, "code: ${result.code}, out: ${result.out}, err: ${result.err}")
     return result.out.joinToString("\n")
 }
 
 fun setSepolicy(pkg: String, rules: String): Boolean {
-    val shell = getRootShell()
-    val result = shell.newJob().add("$ksuDaemonPath profile set-sepolicy $pkg '$rules'")
+    val result = Shell.cmd("$ksuDaemonPath profile set-sepolicy $pkg '$rules'")
         .to(ArrayList(), null).exec()
     Log.i(TAG, "set sepolicy result: ${result.code}")
     return result.isSuccess
 }
 
 fun listAppProfileTemplates(): List<String> {
-    val shell = getRootShell()
-    return shell.newJob().add("$ksuDaemonPath profile list-templates").to(ArrayList(), null)
+    return Shell.cmd("$ksuDaemonPath profile list-templates").to(ArrayList(), null)
         .exec().out
 }
 
 fun getAppProfileTemplate(id: String): String {
-    val shell = getRootShell()
-    return shell.newJob().add("$ksuDaemonPath profile get-template '${id}'")
+    return Shell.cmd("$ksuDaemonPath profile get-template '${id}'")
         .to(ArrayList(), null).exec().out.joinToString("\n")
 }
 
 fun setAppProfileTemplate(id: String, template: String): Boolean {
-    val shell = getRootShell()
     val escapedTemplate = template.replace("\"", "\\\"")
     val cmd = """$ksuDaemonPath profile set-template "$id" "$escapedTemplate'""""
-    return shell.newJob().add(cmd)
+    return Shell.cmd(cmd)
         .to(ArrayList(), null).exec().isSuccess
 }
 
 fun deleteAppProfileTemplate(id: String): Boolean {
-    val shell = getRootShell()
-    return shell.newJob().add("$ksuDaemonPath profile delete-template '${id}'")
+    return Shell.cmd("$ksuDaemonPath profile delete-template '${id}'")
         .to(ArrayList(), null).exec().isSuccess
 }
 
 fun forceStopApp(packageName: String) {
-    val shell = getRootShell()
-    val result = shell.newJob().add("am force-stop $packageName").exec()
+    val result = Shell.cmd("am force-stop $packageName").exec()
     Log.i(TAG, "force stop $packageName result: $result")
 }
 
 fun launchApp(packageName: String) {
-
-    val shell = getRootShell()
     val result =
-        shell.newJob()
-            .add("cmd package resolve-activity --brief $packageName | tail -n 1 | xargs cmd activity start-activity -n")
+        Shell.cmd("cmd package resolve-activity --brief $packageName | tail -n 1 | xargs cmd activity start-activity -n")
             .exec()
     Log.i(TAG, "launch $packageName result: $result")
 }
@@ -446,45 +414,31 @@ val suSFSDaemonPath by lazy {
 }
 
 fun getSuSFS(): String {
-    val shell = getRootShell()
-    val result = ShellUtils.fastCmd(shell, "$suSFSDaemonPath support")
-    return result
+    return ShellUtils.fastCmd("$suSFSDaemonPath support")
 }
 
 fun getSuSFSVersion(): String {
-    val shell = getRootShell()
-    val result = ShellUtils.fastCmd(shell, "$suSFSDaemonPath version")
-    return result
+    return ShellUtils.fastCmd("$suSFSDaemonPath version")
 }
 
 fun getSuSFSVariant(): String {
-    val shell = getRootShell()
-    val result = ShellUtils.fastCmd(shell, "$suSFSDaemonPath variant")
-    return result
+    return ShellUtils.fastCmd("$suSFSDaemonPath variant")
 }
 
 fun getSuSFSFeatures(): String {
-    val shell = getRootShell()
-    val result = ShellUtils.fastCmd(shell, "$suSFSDaemonPath features")
-    return result
+    return ShellUtils.fastCmd("$suSFSDaemonPath features")
 }
 
 fun susfsSUS_SU_0(): String {
-    val shell = getRootShell()
-    val result = ShellUtils.fastCmd(shell, "$suSFSDaemonPath sus_su 0")
-    return result
+    return ShellUtils.fastCmd("$suSFSDaemonPath sus_su 0")
 }
 
 fun susfsSUS_SU_2(): String {
-    val shell = getRootShell()
-    val result = ShellUtils.fastCmd(shell, "$suSFSDaemonPath sus_su 2")
-    return result
+    return ShellUtils.fastCmd("$suSFSDaemonPath sus_su 2")
 }
 
 fun susfsSUS_SU_Mode(): String {
-    val shell = getRootShell()
-    val result = ShellUtils.fastCmd(shell, "$suSFSDaemonPath sus_su mode")
-    return result
+    return ShellUtils.fastCmd("$suSFSDaemonPath sus_su mode")
 }
 
 val kpmmgrPath by lazy {
