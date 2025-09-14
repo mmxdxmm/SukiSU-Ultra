@@ -78,7 +78,7 @@ void ksu_android_ns_fs_check(void)
 	task_unlock(current);
 }
 
-int ksu_validate_address_range(const void *addr, unsigned long size) {
+int ksu_access_ok(const void *addr, unsigned long size) {
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5,0,0)
     /* For kernels before 5.0.0, pass the type argument to access_ok. */
     return access_ok(VERIFY_READ, addr, size);
@@ -200,7 +200,7 @@ long ksu_strncpy_from_user_retry(char *dst, const void __user *unsafe_addr,
 		return ret;
 
 	// we faulted! fallback to slow path
-	if (unlikely(!ksu_validate_address_range(unsafe_addr, count))) {
+	if (unlikely(!ksu_access_ok(unsafe_addr, count))) {
 #ifdef CONFIG_KSU_DEBUG
 		pr_err("%s: faulted!\n", __func__);
 #endif
