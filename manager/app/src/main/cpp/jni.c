@@ -294,6 +294,12 @@ NativeBridgeNP(isSuEnabled, jboolean) {
     return is_su_enabled();
 }
 
+NativeBridgeNP(getManagerUid, jint) {
+    uid_t manager_uid = get_manager_uid();
+    return (jint)manager_uid;
+}
+
+
 NativeBridge(setSuEnabled, jboolean, jboolean enabled) {
     return set_su_enabled(enabled);
 }
@@ -338,79 +344,6 @@ NativeBridgeNP(getSusfsFeatureStatus, jobject) {
     SET_BOOLEAN_FIELD(obj, cls, statusMagicMount, status.status_magic_mount);
     SET_BOOLEAN_FIELD(obj, cls, statusSusSu, status.status_sus_su);
 
-    return obj;
-}
-
-// dynamic manager
-NativeBridge(setDynamicManager, jboolean, jint size, jstring hash) {
-    if (!hash) {
-        LogDebug("setDynamicManager: hash is null");
-        return false;
-    }
-
-    const char* chash = GetEnvironment()->GetStringUTFChars(env, hash, nullptr);
-    bool result = set_dynamic_manager((unsigned int)size, chash);
-    GetEnvironment()->ReleaseStringUTFChars(env, hash, chash);
-
-    LogDebug("setDynamicManager: size=0x%x, result=%d", size, result);
-    return result;
-}
-
-NativeBridgeNP(getDynamicManager, jobject) {
-    struct dynamic_manager_user_config config;
-    bool result = get_dynamic_manager(&config);
-
-    if (!result) {
-        LogDebug("getDynamicManager: failed to get dynamic manager config");
-        return NULL;
-    }
-
-    jobject obj = CREATE_JAVA_OBJECT("com/sukisu/ultra/Natives$DynamicManagerConfig");
-    jclass cls = GetEnvironment()->FindClass(env, "com/sukisu/ultra/Natives$DynamicManagerConfig");
-
-    SET_INT_FIELD(obj, cls, size, (jint)config.size);
-    SET_STRING_FIELD(obj, cls, hash, config.hash);
-
-    LogDebug("getDynamicManager: size=0x%x, hash=%.16s...", config.size, config.hash);
-    return obj;
-}
-
-NativeBridgeNP(clearDynamicManager, jboolean) {
-    bool result = clear_dynamic_manager();
-    LogDebug("clearDynamicManager: result=%d", result);
-    return result;
-}
-
-// Get a list of active managers
-NativeBridgeNP(getManagersList, jobject) {
-    struct manager_list_info managerListInfo;
-    bool result = get_managers_list(&managerListInfo);
-
-    if (!result) {
-        LogDebug("getManagersList: failed to get active managers list");
-        return NULL;
-    }
-
-    jobject obj = CREATE_JAVA_OBJECT("com/sukisu/ultra/Natives$ManagersList");
-    jclass managerListCls = GetEnvironment()->FindClass(env, "com/sukisu/ultra/Natives$ManagersList");
-
-    SET_INT_FIELD(obj, managerListCls, count, (jint)managerListInfo.count);
-
-    jobject managersList = CREATE_ARRAYLIST();
-
-    for (int i = 0; i < managerListInfo.count; i++) {
-        jobject managerInfo = CREATE_JAVA_OBJECT_WITH_PARAMS(
-                "com/sukisu/ultra/Natives$ManagerInfo",
-                "(II)V",
-                (jint)managerListInfo.managers[i].uid,
-                (jint)managerListInfo.managers[i].signature_index
-        );
-        ADD_TO_LIST(managersList, managerInfo);
-    }
-
-    SET_OBJECT_FIELD(obj, managerListCls, managers, managersList);
-
-    LogDebug("getManagersList: count=%d", managerListInfo.count);
     return obj;
 }
 

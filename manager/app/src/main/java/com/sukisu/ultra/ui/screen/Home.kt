@@ -682,7 +682,11 @@ private fun InfoCard(
 
             InfoCardItem(
                 stringResource(R.string.home_manager_version),
-                "${systemInfo.managerVersion.first} (${systemInfo.managerVersion.second.toInt()})",
+                if (Natives.version >= Natives.MINIMAL_SUPPORTED_MANAGER_UID) {
+                        "${systemInfo.managerVersion.first} (${systemInfo.managerVersion.second.toInt()}) | UID: ${Natives.getManagerUid()}"
+                    } else {
+                        "${systemInfo.managerVersion.first} (${systemInfo.managerVersion.second.toInt()})"
+                    },
                 icon = Icons.Default.SettingsSuggest,
             )
 
@@ -692,37 +696,6 @@ private fun InfoCard(
                     stringResource(R.string.home_hook_type),
                     Natives.getHookType(),
                     icon = Icons.Default.Link
-                )
-            }
-
-            // 活跃管理器
-            if (!isSimpleMode && systemInfo.isDynamicSignEnabled && systemInfo.managersList != null) {
-                val signatureMap = systemInfo.managersList.managers.groupBy { it.signatureIndex }
-
-                val managersText = buildString {
-                    signatureMap.toSortedMap().forEach { (signatureIndex, managers) ->
-                        append(managers.joinToString(", ") { "UID: ${it.uid}" })
-                        append(" ")
-                        append(
-                            when (signatureIndex) {
-                                0 -> "(${stringResource(R.string.default_signature)})"
-                                100 -> "(${stringResource(R.string.dynamic_managerature)})"
-                                else -> if (signatureIndex >= 1) "(${
-                                    stringResource(
-                                        R.string.signature_index,
-                                        signatureIndex
-                                    )
-                                })" else "(${stringResource(R.string.unknown_signature)})"
-                            }
-                        )
-                        append(" | ")
-                    }
-                }.trimEnd(' ', '|')
-
-                InfoCardItem(
-                    stringResource(R.string.multi_manager_list),
-                    managersText.ifEmpty { stringResource(R.string.no_active_manager) },
-                    icon = Icons.Default.Group,
                 )
             }
 
