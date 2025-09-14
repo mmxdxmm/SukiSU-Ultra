@@ -171,7 +171,7 @@ FILLDIR_RETURN_TYPE collect_user_ids(struct dir_context *ctx, const char *name,
 	if (d_type != DT_DIR || namelen <= 0)
 		return FILLDIR_ACTOR_CONTINUE;
 	if (name[0] == '.' && (namelen == 1 || (namelen == 2 && name[1] == '.')))
-		return FILLDIR_ACTOR_CONTINUE;;
+		return FILLDIR_ACTOR_CONTINUE;
 
 	// Parse numeric user ID
 	uid_t uid = 0;
@@ -309,7 +309,7 @@ basically no mask and flags for =< 4.10
 	list_add_tail(&uid_entry->list, scan_ctx->uid_list);
 	scan_ctx->pkg_count++;
 
-	pr_info("Package: %s, UID: %u (user %u)\n", uid_entry->package, uid, scan_ctx->user_id);
+	pr_info("User Package: %s, UID: %u (user %u)\n", uid_entry->package, uid, scan_ctx->user_id);
 	return FILLDIR_ACTOR_CONTINUE;
 }
 
@@ -531,7 +531,7 @@ void search_manager(const char *path, int depth, struct list_head *uid_data)
 		struct data_path *pos, *n;
 
 		list_for_each_entry_safe(pos, n, &data_path_list, list) {
-			struct my_dir_context ctx = {
+			struct my_dir_context ctx = { 
 				.ctx.actor = my_actor,
 				.data_path_list = &data_path_list,
 				.parent_dir = pos->dirpath,
@@ -582,8 +582,8 @@ skip_iterate:
 			list_del(&pos->list);
 			if (pos != &data)
 				kfree(pos);
+			}
 		}
-	}
 
 	// clear apk_path_hash_list unconditionally
 	pr_info("search manager: cleanup!\n");
