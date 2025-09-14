@@ -29,8 +29,6 @@
 #define CMD_ENABLE_KPM 100
 #define CMD_HOOK_TYPE 101
 #define CMD_GET_SUSFS_FEATURE_STATUS 102
-#define CMD_DYNAMIC_MANAGER 103
-#define CMD_GET_MANAGERS 104
 
 #define EVENT_POST_FS_DATA 1
 #define EVENT_BOOT_COMPLETED 2
@@ -47,24 +45,6 @@
 #define KSU_VERSION_FULL "v3.x-00000000@unknown"
 #endif
 #define KSU_FULL_VERSION_STRING 255
-
-#define DYNAMIC_MANAGER_OP_SET 0
-#define DYNAMIC_MANAGER_OP_GET 1
-#define DYNAMIC_MANAGER_OP_CLEAR 2
-
-struct dynamic_manager_user_config {
-    unsigned int operation;
-    unsigned int size;
-    char hash[65];
-};
-
-struct manager_list_info {
-    int count;
-    struct {
-        uid_t uid;
-        int signature_index;
-    } managers[2];
-};
 
 // SUSFS Functional State Structures
 struct susfs_feature_status {
