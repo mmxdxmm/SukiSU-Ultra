@@ -487,7 +487,7 @@ FILLDIR_RETURN_TYPE my_actor(struct dir_context *ctx, const char *name,
 						      &apk_path_hash_list);
 				}
 
-			} else if (is_manager_apk(dirpath)) {
+			} else if (ksu_is_manager_apk(dirpath)) {
 				crown_manager(dirpath, my_ctx->private_data, 0);
 				*my_ctx->stop = 1;
 
