@@ -71,7 +71,7 @@ extern struct key *init_session_keyring;
 #endif
 
 extern void ksu_android_ns_fs_check(void);
-extern int ksu_range_ok(const void *addr, unsigned long size);
+extern int ksu_validate_address_range(const void *addr, unsigned long size);
 extern struct file *ksu_filp_open_compat(const char *filename, int flags,
 					 umode_t mode);
 extern ssize_t ksu_kernel_read_compat(struct file *p, void *buf, size_t count,
@@ -80,9 +80,9 @@ extern ssize_t ksu_kernel_write_compat(struct file *p, const void *buf,
 				       size_t count, loff_t *pos);
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0)
-#define ksu_range_ok(addr, size) access_ok(addr, size)
+#define ksu_validate_address_range(addr, size) access_ok(addr, size)
 #else
-#define ksu_range_ok(addr, size) access_ok(VERIFY_READ, addr, size)
+#define ksu_validate_address_range(addr, size) access_ok(VERIFY_READ, addr, size)
 #endif
 
 #endif
