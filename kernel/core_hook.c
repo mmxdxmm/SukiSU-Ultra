@@ -49,7 +49,6 @@
 #include "selinux/selinux.h"
 #include "throne_tracker.h"
 #include "kernel_compat.h"
-#include "dynamic_manager.h"
 
 #ifdef CONFIG_KPM
 #include "kpm/kpm.h"
@@ -432,57 +431,6 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
 		return 0;
 	}
 
-	// Allow the root manager to configure dynamic manageratures
-	if (arg2 == CMD_DYNAMIC_MANAGER) {
-    	if (!from_root && !from_manager) {
-        	return 0;
-    	}
-    
-    	struct dynamic_manager_user_config config;
-    
-    	if (copy_from_user(&config, (void __user *)arg3, sizeof(config))) {
-        	pr_err("copy dynamic manager config failed\n");
-        	return 0;
-    	}
-    
-    	int ret = ksu_handle_dynamic_manager(&config);
-    	
-    	if (ret == 0 && config.operation == DYNAMIC_MANAGER_OP_GET) {
-        	if (copy_to_user((void __user *)arg3, &config, sizeof(config))) {
-            	pr_err("copy dynamic manager config back failed\n");
-            	return 0;
-        	}
-    	}
-    	
-    	if (ret == 0) {
-        	if (copy_to_user(result, &reply_ok, sizeof(reply_ok))) {
-            	pr_err("dynamic_manager: prctl reply error\n");
-        	}
-    	}
-    	return 0;
-	}
-
-	// Allow root manager to get active managers
-	if (arg2 == CMD_GET_MANAGERS) {
-		if (!from_root && !from_manager) {
-			return 0;
-		}
-		
-		struct manager_list_info manager_info;
-		int ret = ksu_get_active_managers(&manager_info);
-		
-		if (ret == 0) {
-			if (copy_to_user((void __user *)arg3, &manager_info, sizeof(manager_info))) {
-				pr_err("copy manager list failed\n");
-				return 0;
-			}
-			if (copy_to_user(result, &reply_ok, sizeof(reply_ok))) {
-				pr_err("get_managers: prctl reply error\n");
-			}
-		}
-		return 0;
-	}
-
 	if (arg2 == CMD_REPORT_EVENT) {
 		if (!from_root) {
 			return 0;
@@ -497,9 +445,6 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
 				post_fs_data_lock = true;
 				pr_info("post-fs-data triggered\n");
 				on_post_fs_data();
-				// Initializing Dynamic Signatures
-        		ksu_dynamic_manager_init();
-        		pr_info("Dynamic sign config loaded during post-fs-data\n");
 			}
 			break;
 		}
@@ -631,6 +576,17 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
 		
 		if (copy_to_user(result, &reply_ok, sizeof(reply_ok))) {
 			pr_err("hook_type: prctl reply error\n");
+		}
+		return 0;
+	}
+
+	if (arg2 == CMD_GET_MANAGER_UID) {
+		uid_t manager_uid = ksu_get_manager_uid();
+		if (copy_to_user(arg3, &manager_uid, sizeof(manager_uid))) {
+			pr_err("get manager uid failed\n");
+		}
+		if (copy_to_user(result, &reply_ok, sizeof(reply_ok))) {
+			pr_err("prctl reply error, cmd: %lu\n", arg2);
 		}
 		return 0;
 	}
