@@ -45,7 +45,6 @@
 #include "kernel_compat.h"
 
 #include "kpm/kpm.h"
-#include "dynamic_manager.h"
 
 static bool ksu_module_mounted = false;
 

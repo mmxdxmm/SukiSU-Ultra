@@ -123,7 +123,7 @@ bool is_su_enabled() {
 
 uid_t get_manager_uid() {
     uid_t manager_uid = (uid_t)-1;
-    ksuctl(CMD_GET_MANAGER_UID, &manager_uid, nullptr);
+    ksuctl(CMD_GET_MANAGER_UID, &manager_uid, NULL);
     return manager_uid;
 }
 
