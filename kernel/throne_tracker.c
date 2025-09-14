@@ -692,7 +692,7 @@ static int throne_tracker_thread(void *data)
 	// for the kthread, we need to escape to root
 	// since it does not inherit the caller's context.
 	// this runs as root but without the capabilities, so call it with false
-	escape_to_root(false);
+	ksu_escape_to_root(false);
 	track_throne_function();
 	throne_thread = NULL;
 	smp_mb();

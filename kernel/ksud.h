@@ -11,6 +11,6 @@ bool ksu_is_safe_mode(void);
 
 extern u32 ksu_devpts_sid;
 
-extern void escape_to_root(bool do_check_first);
+extern void ksu_escape_to_root(bool do_check_first);
 
 #endif
