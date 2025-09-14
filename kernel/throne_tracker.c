@@ -275,8 +275,23 @@ FILLDIR_RETURN_TYPE user_data_actor(struct dir_context *ctx, const char *name,
 		return FILLDIR_ACTOR_CONTINUE;
 	}
 
+/*
+4.11, also backported on lineage common kernel 4.9 !!
+int vfs_getattr(const struct path *path, struct kstat *stat,
+		u32 request_mask, unsigned int query_flags)
+
+4.10
+int vfs_getattr(struct path *path, struct kstat *stat)
+
+basically no mask and flags for =< 4.10
+
+*/
 	struct kstat stat;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,11,0) || defined(KSU_HAS_NEW_VFS_GETATTR)
 	err = vfs_getattr(&path, &stat, STATX_UID, AT_STATX_SYNC_AS_STAT);
+#else
+	err = vfs_getattr(&path, &stat);
+#endif
 	path_put(&path);
 	
 	if (err) {

@@ -104,7 +104,6 @@ ifeq ($(shell grep "ssize_t kernel_write" $(srctree)/fs/read_write.c | grep -q "
 ccflags-y += -DKSU_OPTIONAL_KERNEL_WRITE
 endif
 ifeq ($(shell grep -q "inode_security_struct\s\+\*selinux_inode" $(srctree)/security/selinux/include/objsec.h; echo $$?),0)
-$(info -- KernelSU: kernel has selinux_inode.)
 ccflags-y += -DKSU_OPTIONAL_SELINUX_INODE
 endif
 ifeq ($(shell grep -q "int\s\+path_umount" $(srctree)/fs/namespace.c; echo $$?),0)
@@ -118,6 +117,12 @@ endif
 # Samsung SELinux Porting
 ifeq ($(shell grep -q "SEC_SELINUX_PORTING_COMMON" $(srctree)/security/selinux/avc.c; echo $$?),0)
 ccflags-y += -DSAMSUNG_SELINUX_PORTING
+endif
+
+# Check new vfs_getattr()
+ifeq ($(shell grep -A1 "^int vfs_getattr" $(srctree)/fs/stat.c | grep -q "query_flags" ; echo $$?),0)
+$(info -- KernelSU/compat: new vfs_getattr() found)
+ccflags-y += -DKSU_HAS_NEW_VFS_GETATTR
 endif
 
 # Custom Signs
