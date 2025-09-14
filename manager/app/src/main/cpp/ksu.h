@@ -105,14 +105,6 @@ struct app_profile {
     };
 };
 
-struct manager_list_info {
-    int count;
-    struct {
-        uid_t uid;
-        int signature_index;
-    } managers[2];
-};
-
 bool set_app_profile(const struct app_profile* profile);
 
 bool get_app_profile(char* key, struct app_profile* profile);
@@ -126,14 +118,6 @@ bool is_KPM_enable();
 bool get_hook_type(char* hook_type, size_t size);
 
 bool get_susfs_feature_status(struct susfs_feature_status* status);
-
-bool set_dynamic_manager(unsigned int size, const char* hash);
-
-bool get_dynamic_manager(struct dynamic_manager_user_config* config);
-
-bool clear_dynamic_manager();
-
-bool get_managers_list(struct manager_list_info* info);
 
 bool verify_module_signature(const char* input);
 

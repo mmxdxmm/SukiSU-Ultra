@@ -64,8 +64,6 @@ class HomeViewModel : ViewModel() {
         val superuserCount: Int = 0,
         val moduleCount: Int = 0,
         val kpmModuleCount: Int = 0,
-        val managersList: Natives.ManagersList? = null,
-        val isDynamicSignEnabled: Boolean = false,
         val zygiskImplement: String = ""
     )
 
@@ -431,32 +429,6 @@ class HomeViewModel : ViewModel() {
                     }
                 }
 
-                // 获取动态管理器状态和管理器列表
-                val dynamicSignConfig = try {
-                    Natives.getDynamicManager()
-                } catch (e: Exception) {
-                    Log.w(TAG, "Failed to get dynamic manager config", e)
-                    null
-                }
-
-                val isDynamicSignEnabled = try {
-                    dynamicSignConfig?.isValid() == true
-                } catch (e: Exception) {
-                    Log.w(TAG, "Failed to check dynamic manager validity", e)
-                    false
-                }
-
-                val managersList = if (isDynamicSignEnabled) {
-                    try {
-                        Natives.getManagersList()
-                    } catch (e: Exception) {
-                        Log.w(TAG, "Failed to get managers list", e)
-                        null
-                    }
-                } else {
-                    null
-                }
-
                 val deviceModel = try {
                     getDeviceModel().orSafe("Unknown")
                 } catch (e: Exception) {
@@ -521,8 +493,6 @@ class HomeViewModel : ViewModel() {
                     superuserCount = superuserCount,
                     moduleCount = moduleCount,
                     kpmModuleCount = kpmModuleCount,
-                    managersList = managersList,
-                    isDynamicSignEnabled = isDynamicSignEnabled,
                     zygiskImplement = zygiskImplement
                 )
             } catch (e: Exception) {

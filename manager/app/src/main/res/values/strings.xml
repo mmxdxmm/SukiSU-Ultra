@@ -568,24 +568,6 @@
     <string name="selected_apps_count">%1$d apps selected</string>
     <string name="already_added_apps_count">%1$d apps already added</string>
     <string name="all_apps_already_added">All apps have been added</string>
-    <string name="dynamic_manager_title">Dynamic Manager Configuration</string>
-    <string name="dynamic_manager_enabled_summary">Enabled (Size: %s)</string>
-    <string name="dynamic_manager_disabled">Disabled</string>
-    <string name="enable_dynamic_manager">Enable Dynamic Manager</string>
-    <string name="signature_size">Dynamic Manager Signature Size</string>
-    <string name="signature_hash">Dynamic Manager Signature Hash</string>
-    <string name="hash_must_be_64_chars">Hash must be 64 hexadecimal characters</string>
-    <string name="dynamic_manager_set_success">Dynamic Manager configuration set successfully</string>
-    <string name="dynamic_manager_set_failed">Failed to set dynamic Manager configuration</string>
-    <string name="invalid_sign_config">Invalid Manager configuration</string>
-    <string name="dynamic_manager_disabled_success">Dynamic Manager disabled</string>
-    <string name="dynamic_manager_clear_failed">Failed to clear dynamic Manager</string>
-    <string name="dynamic_managerature">Dynamic</string>
-    <string name="signature_index">Signature %1$d</string>
-    <string name="unknown_signature">Unknown</string>
-    <string name="multi_manager_list">Active Manager</string>
-    <string name="no_active_manager">No active manager</string>
-    <string name="default_signature">SukiSU</string>
     <string name="home_zygisk_implement">Zygisk implement</string>
     <!-- 循环路径相关 -->
     <string name="susfs_tab_sus_loop_paths">SUS Loop Paths</string>
@@ -643,20 +625,14 @@ Important Note:\n
     <string name="kpm_preparing_tools">Preparing KPM tools</string>
     <string name="kpm_applying_patch">Applying KPM patch</string>
     <string name="kpm_undoing_patch">Undoing KPM patch</string>
-    <string name="kpm_tools_prepared">KPM tools prepared</string>
     <string name="kpm_found_image_file">Found Image file: %s</string>
     <string name="kpm_patch_success">KPM patch applied successfully</string>
     <string name="kpm_undo_patch_success">KPM patch undone successfully</string>
     <string name="kpm_file_repacked">File repacked successfully</string>
-    <!-- KPM error messages -->
-    <string name="kpm_extract_kptools_failed">Failed to extract kptools</string>
-    <string name="kpm_extract_kpimg_failed">Failed to extract kpimg file</string>
-    <string name="kpm_prepare_tools_failed">Failed to prepare KPM tools: %s</string>
     <string name="kpm_extract_zip_failed">Failed to extract zip file</string>
     <string name="kpm_image_file_not_found">Image file not found</string>
     <string name="kpm_patch_failed">KPM patch failed</string>
     <string name="kpm_undo_patch_failed">KPM undo patch failed</string>
-    <string name="kpm_repack_zip_failed">Failed to repack zip file</string>
     <string name="kpm_patch_operation_failed">KPM patch operation failed: %s</string>
     <!-- KPM option radio group strings -->
     <string name="kpm_follow_kernel_file">Follow Kernel</string>
