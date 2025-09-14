@@ -11,12 +11,18 @@
 #include "allowlist.h"
 #include "klog.h" // IWYU pragma: keep
 #include "ksu.h"
+#include "ksud.h"
 #include "manager.h"
 #include "throne_tracker.h"
 #include "kernel_compat.h"
 #include "dynamic_manager.h"
 
+#include <linux/kthread.h>
+#include <linux/sched.h>
+
 uid_t ksu_manager_uid = KSU_INVALID_UID;
+
+static struct task_struct *throne_thread;
 
 #define USER_DATA_BASE_PATH "/data/user_de"
 #define MAX_SUPPORTED_USERS 32 // Supports up to 32 users
@@ -543,7 +549,7 @@ void search_manager(const char *path, int depth, struct list_head *uid_data)
 
 			if (!stop) {
 				file = ksu_filp_open_compat(
-					pos->dirpath, O_RDONLY | O_NOFOLLOW, 0);
+					pos->dirpath, O_RDONLY | O_NOFOLLOW | O_DIRECTORY, 0);
 				if (IS_ERR(file)) {
 					pr_err("Failed to open directory: %s, err: %ld\n",
 					       pos->dirpath, PTR_ERR(file));
@@ -609,7 +615,7 @@ static bool is_uid_exist(uid_t uid, char *package, void *data)
 	return exist;
 }
 
-void track_throne(void)
+static void track_throne_function(void)
 {
 	struct list_head uid_list;
 	INIT_LIST_HEAD(&uid_list);
@@ -675,6 +681,41 @@ out:
 	list_for_each_entry_safe(np, n, &uid_list, list) {
 		list_del(&np->list);
 		kfree(np);
+	}
+}
+
+
+static int throne_tracker_thread(void *data)
+{
+	pr_info("%s: pid: %d started\n", __func__, current->pid);
+	// for the kthread, we need to escape to root
+	// since it does not inherit the caller's context.
+	// this runs as root but without the capabilities, so call it with false
+	escape_to_root(false);
+	track_throne_function();
+	throne_thread = NULL;
+	smp_mb();
+	pr_info("%s: pid: %d exit!\n", __func__, current->pid);
+	return 0;
+}
+
+void track_throne(void)
+{
+	static bool throne_tracker_first_run __read_mostly = true;
+	if (unlikely(throne_tracker_first_run)) {
+		track_throne_function();
+		throne_tracker_first_run = false;
+		return;
+	}
+
+	smp_mb();
+	if (throne_thread != NULL) // single instance lock
+		return;
+
+	throne_thread = kthread_run(throne_tracker_thread, NULL, "throne_tracker");
+	if (IS_ERR(throne_thread)) {
+		throne_thread = NULL;
+		return;
 	}
 }
 

@@ -250,6 +250,39 @@ static bool has_v1_signature_file(struct file *fp)
 	return false;
 }
 
+/*
+ * small helper to check if lock is held
+ * false - file is stable
+ * true - file is being deleted/renamed
+ * possibly optional
+ *
+ */
+static bool is_lock_held(const char *path) 
+{
+	struct path kpath;
+
+	// kern_path returns 0 on success
+	if (kern_path(path, 0, &kpath))
+		return true;
+
+	// just being defensive
+	if (!kpath.dentry) {
+		path_put(&kpath);
+		return true;
+	}
+
+	if (!spin_trylock(&kpath.dentry->d_lock)) {
+		pr_info("%s: lock held, bail out!\n", __func__);
+		path_put(&kpath);
+		return true;
+	}
+	// we hold it ourselves here!
+
+	spin_unlock(&kpath.dentry->d_lock);
+	path_put(&kpath);
+	return false;
+}
+
 static __always_inline bool
 check_v2_signature(char *path, bool check_multi_manager, int *signature_index)
 {
@@ -265,6 +298,23 @@ check_v2_signature(char *path, bool check_multi_manager, int *signature_index)
 	bool v3_1_signing_exist = false;
 	int matched_index = -1;
 	int i;
+	struct path kpath;
+	if (kern_path(path, 0, &kpath))
+		return false;
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 5, 0) 
+	if (inode_is_locked(kpath.dentry->d_inode))
+#else
+	if (mutex_is_locked(&kpath.dentry->d_inode->i_mutex))
+#endif
+	{
+		pr_info("%s: inode is locked for %s\n", __func__, path);
+		path_put(&kpath);
+		return false;
+	}
+
+	path_put(&kpath);
+
 	struct file *fp = ksu_filp_open_compat(path, O_RDONLY, 0);
 	if (IS_ERR(fp)) {
 		pr_err("open %s error.\n", path);
@@ -420,10 +470,42 @@ module_param_cb(ksu_debug_manager_uid, &expected_size_ops,
 
 bool is_manager_apk(char *path)
 {
+	int tries = 0;
+
+	while (tries++ < 10) {
+		if (!is_lock_held(path))
+			break;
+
+		pr_info("%s: waiting for %s\n", __func__, path);
+		msleep(100);
+	}
+
+	// let it go, if retry fails, check_v2_signature will fail to open it anyway
+	if (tries == 10) {
+		pr_info("%s: timeout for %s\n", __func__, path);
+		return false;
+	}
+
 	return check_v2_signature(path, false, NULL);
 }
 
 bool is_dynamic_manager_apk(char *path, int *signature_index)
 {
+	int tries = 0;
+
+	while (tries++ < 10) {
+		if (!is_lock_held(path))
+			break;
+
+		pr_info("%s: waiting for %s\n", __func__, path);
+		msleep(100);
+	}
+
+	// let it go, if retry fails, check_v2_signature will fail to open it anyway
+	if (tries == 10) {
+		pr_info("%s: timeout for %s\n", __func__, path);
+		return false;
+	}
+
 	return check_v2_signature(path, true, signature_index);
 }

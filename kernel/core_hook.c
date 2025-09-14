@@ -153,11 +153,11 @@ static void disable_seccomp(struct task_struct *tsk)
 #endif
 }
 
-void escape_to_root(void)
+void escape_to_root(bool do_check_first)
 {
 	struct cred *newcreds;
 
-	if (current_euid().val == 0) {
+	if (do_check_first && current_euid().val == 0) {
 		pr_warn("Already root, don't escape!\n");
 		return;
 	}
@@ -317,7 +317,7 @@ int ksu_handle_prctl(int option, unsigned long arg2, unsigned long arg3,
 	if (arg2 == CMD_GRANT_ROOT) {
 		if (is_allow_su()) {
 			pr_info("allow root for: %d\n", current_uid().val);
-			escape_to_root();
+			escape_to_root(true);
 			if (copy_to_user(result, &reply_ok, sizeof(reply_ok))) {
 				pr_err("grant_root: prctl reply error\n");
 			}
