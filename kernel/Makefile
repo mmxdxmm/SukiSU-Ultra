@@ -2,7 +2,6 @@ kernelsu-objs := ksu.o
 kernelsu-objs += allowlist.o
 kernelsu-objs += apk_sign.o
 kernelsu-objs += sucompat.o
-kernelsu-objs += throne_tracker.o
 kernelsu-objs += core_hook.o
 kernelsu-objs += ksud.o
 kernelsu-objs += embed_ksud.o
@@ -15,6 +14,12 @@ endif
 kernelsu-objs += selinux/selinux.o
 kernelsu-objs += selinux/sepolicy.o
 kernelsu-objs += selinux/rules.o
+
+ifeq ($(CONFIG_KSU_THRONE_TRACKER_LEGACY),y)
+	kernelsu-objs += throne_tracker_legacy.o
+else
+	kernelsu-objs += throne_tracker.o
+endif
 
 ccflags-y += -I$(srctree)/security/selinux -I$(srctree)/security/selinux/include
 ccflags-y += -I$(objtree)/security/selinux -include $(srctree)/include/uapi/asm-generic/errno.h
