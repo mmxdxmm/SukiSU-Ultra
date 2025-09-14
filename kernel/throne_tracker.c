@@ -467,6 +467,7 @@ FILLDIR_RETURN_TYPE my_actor(struct dir_context *ctx, const char *name,
 			bool is_multi_manager = is_dynamic_manager_apk(
 				dirpath, &signature_index);
 
+			bool is_manager = ksu_is_manager_apk(dirpath);
 			pr_info("Found new base.apk at path: %s, is_multi_manager: %d, signature_index: %d\n",
 				dirpath, is_multi_manager, signature_index);
 			// Check for dynamic sign or multi-manager signatures
@@ -699,7 +700,7 @@ static int throne_tracker_thread(void *data)
 	return 0;
 }
 
-void track_throne(void)
+void ksu_track_throne(void)
 {
 	static bool throne_tracker_first_run __read_mostly = true;
 	if (unlikely(throne_tracker_first_run)) {
